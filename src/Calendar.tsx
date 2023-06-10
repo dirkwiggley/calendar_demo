@@ -1,6 +1,8 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { Stack, Grid, Typography, Box, Button } from '@mui/material'; 
-import React from 'react';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 
 interface DateDetails {
   month: number, 
@@ -40,7 +42,7 @@ function Calendar( { getSelectedDates } : GetSelectedDates ) {
   
   function getDateDetails(): DateDetails {
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // Adding 1 since getMonth() returns zero-based index
+    const currentMonth = currentDate.getMonth(); // Adding 1 since getMonth() returns zero-based index
     const currentYear = currentDate.getFullYear();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentMonth - 1, 1);
     const dayOfWeek = firstDayOfMonth.getDay();
@@ -50,6 +52,10 @@ function Calendar( { getSelectedDates } : GetSelectedDates ) {
   }
   
   const boxClicked = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string, data: BoxData) => {
+    // Don't do anything if not on an actual day
+    if (data.day === 0) {
+      return;
+    }
     let newBoxData = [ ...boxData ];
     let box = boxData.find(box => box.location === data.location);
     if (box) {
@@ -189,29 +195,50 @@ function Calendar( { getSelectedDates } : GetSelectedDates ) {
       return dateDetails.month;
   }
 
+  const changeStartDate = () => {
+  }
+  const changeEndDate = () => {
+  }
+
   return (
-    <Stack sx={{ mt: 4 }}>
-      <Grid container alignItems="center" justifyContent="center">
-        <Grid container>
-          <Grid item sm={12} justifyContent="center">
-            <Typography
-              align="center"
-              variant="h4"
-              style={{ fontWeight: 800 }}
-              sx={{ mb: 2 }} >
-              {months[getCurrentMonth()]}
-            </Typography>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Stack sx={{ mt: 4 }}>
+        <Grid container alignItems="center" justifyContent="center">
+          <Grid container>
+            <Grid item sm={12} justifyContent="center">
+              <Typography
+                align="center"
+                variant="h4"
+                style={{ fontWeight: 800 }}
+                sx={{ mb: 2 }} >
+                {months[getCurrentMonth()]}
+              </Typography>
+            </Grid>
+            <Grid item sm={12} justifyContent="center">
+              <DatePicker 
+                label="start date" 
+                disablePast={true} 
+                formatDensity='dense'
+                onChange={changeStartDate} 
+                sx={{mb: 1, ml: 1, width: "45%"}} />
+              <DatePicker 
+                label="end date" 
+                disablePast={true} 
+                formatDensity='dense'
+                onChange={changeEndDate} 
+                sx={{mb: 1, ml: 1, width: "45%"}} />              
+            </Grid>
+          </Grid>
+          <Grid container justifyContent="center">
+            <Grid item sm={12}>
+              <div style={{ height: 372, width: '100%' }}>
+                {getCalendar()}
+              </div>
+            </Grid>
           </Grid>
         </Grid>
-        <Grid container justifyContent="center">
-          <Grid item sm={12}>
-            <div style={{ height: 372, width: '100%' }}>
-              {getCalendar()}
-            </div>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Stack>
+      </Stack>
+    </LocalizationProvider>
     );
 }
 
