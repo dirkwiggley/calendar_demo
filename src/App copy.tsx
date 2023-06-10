@@ -1,0 +1,212 @@
+import { useEffect, useState } from 'react';
+import { Stack, Grid, Typography, Box } from '@mui/material'; 
+import React from 'react';
+
+interface DateDetails {
+  month: number, 
+  year: number, 
+  firstDayOfWeek: number, 
+  numberOfDays: number
+}
+
+interface BoxData {
+  location: string,
+  day: number | string,
+  data: string,
+  year: number,
+  selected: boolean
+}
+
+function App() {
+  const [boxData, setBoxData] = useState<Array<BoxData>>([]);
+  const [updateBoxData, setUpdateBoxData] = useState<boolean>(true);
+
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  useEffect(() => {
+    if (updateBoxData) {
+      setUpdateBoxData(false);
+      setBoxData(getBoxData());
+    }
+    return () => {
+      setUpdateBoxData(false);
+    }
+  }, [boxData]);
+  
+  function getDateDetails(): DateDetails {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // Adding 1 since getMonth() returns zero-based index
+    const currentYear = currentDate.getFullYear();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentMonth - 1, 1);
+    const dayOfWeek = firstDayOfMonth.getDay();
+    const numberOfDays = new Date(currentDate.getFullYear(), currentMonth, 0).getDate();
+  
+    return { month: currentMonth, year: currentYear, firstDayOfWeek: dayOfWeek, numberOfDays: numberOfDays };
+  }
+  
+  const boxClicked = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string, data: BoxData) =>{
+    alert(`${id}: ${data.day}, selected: ${data.selected}, data: ${JSON.stringify(data, null, 2)}`);
+  }
+
+  function getByKey(obj: any, key: string): string {
+    return obj[key];
+  }
+
+  function addStringToObject(obj: any, key: string, value: string): void {
+    obj[key] = value;
+  }
+
+/*
+  interface BoxData {
+  location: string,
+  day: number,
+  year: number,
+  data: string,
+  selected: boolean
+  }
+*/
+  function getBoxData() : Array<BoxData> { 
+    const month_details = getDateDetails();
+    let dayCounter = 1;
+    const newBoxData: Array<BoxData> = [];
+    // Note: day = index + 1
+    for (let index = 0; index < 35; index++) {
+      const newKey = "calendar" + (index + 1).toString();
+      let boxData: BoxData;
+      // The firstDayOfWeek is Sunday = 0
+      if (index  < month_details.firstDayOfWeek) {
+        boxData = { location: newKey, day: 0, year: month_details.year, data: "", selected: false };
+      } 
+      else if (dayCounter > month_details.numberOfDays) {
+        boxData = { location: newKey, day: 0, year: month_details.year, data: "", selected: false };
+      }
+      else {
+        boxData = { location: newKey, day: dayCounter, year: month_details.year, data: dayCounter.toString(), selected: false };
+        dayCounter++;
+      }
+      newBoxData.push(boxData);
+    }
+    return newBoxData;
+  }
+
+  /*
+    returns: <Grid item><Box /></Grid>
+  */
+  function createJSXBox(boxData: BoxData, index: string): JSX.Element {
+    // let day = '';
+    // if (typeof(data.day) === 'number') {
+    //   if (data.day !== 0) {
+    //     day = data.day.toString();
+    //   }
+    // } else {
+    //   day = data.day;
+    // }
+    return (
+      <Grid item key={"header" + index.toString()}>
+        <Box 
+          sx={{ 
+            alignContent: "center", 
+            textAlign: "center",
+            height: 60, 
+            width: 60, 
+            border: 1,
+            cursor: "pointer",
+            ":hover": {
+              bgcolor: "lightblue",
+              color: "white"
+            } 
+          }} 
+          id={index}
+          onClick={(e) => boxClicked(e, index, boxData)}>
+          <Typography alignItems={'center'} sx={{ height: '100%', width: '100%'}}>
+            {boxData.data}
+          </Typography>
+        </Box>
+      </Grid>
+    );
+  }
+
+  function getHeaders() : JSX.Element {
+    const daysOfWeek = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+    let boxes: Array<JSX.Element> = [];
+    daysOfWeek.forEach((header, index) => {
+      const headerLocation = "header"+index.toString();
+      const boxData = { location: headerLocation, day: header, year: 0, data: header, selected: false };
+      boxes.push(createJSXBox(boxData, headerLocation));
+    });
+
+    return <Grid item xs={12}><Grid container justifyContent={'center'}>{boxes}</Grid></Grid>;
+  }
+
+  function addRowToCalendar(dataContainer: JSX.Element, row: JSX.Element) {
+    dataContainer = React.cloneElement(dataContainer, {
+      children: (
+        <>
+          {dataContainer.props.children}
+          {row}
+        </>
+      )
+    });
+    return dataContainer;
+  }
+
+  function getCalendar(): JSX.Element | null {
+    let calendarContainer: JSX.Element = <Grid container></Grid>;
+    // header (days of week)
+    let headerElement = getHeaders();
+    calendarContainer = addRowToCalendar(calendarContainer, headerElement);
+    // Calendar days
+    const allBoxData: Array<BoxData> = boxData;
+    let rowOfBoxes: Array<JSX.Element> = [];
+    allBoxData.forEach((box, index) => {
+      const jsxBox = createJSXBox(box, index.toString());
+      rowOfBoxes.push(jsxBox);
+      if (rowOfBoxes.length === 7) {
+        let rowContainer: JSX.Element = <Grid item xs={12}><Grid container justifyContent={'center'}>{rowOfBoxes}</Grid></Grid>;
+        calendarContainer = addRowToCalendar(calendarContainer, rowContainer);
+        rowOfBoxes = [];
+      }
+    });
+
+
+    return calendarContainer;
+  }
+
+  const getCurrentMonth = () => {
+     const dateDetails = getDateDetails();
+      return dateDetails.month;
+  }
+
+  return (
+    <Stack sx={{ mt: 4 }}>
+      <Grid container alignItems="center" justifyContent="center">
+        <Grid container>
+          <Grid item sm={2} />
+          <Grid item sm={8} justifyContent="center">
+            <Typography
+              align="center"
+              variant="h4"
+              style={{ fontWeight: 800 }}
+              sx={{ mb: 2 }}
+            >
+              {months[getCurrentMonth()]}
+            </Typography>
+          </Grid>
+          <Grid item sm={2} />
+        </Grid>
+        <Grid container justifyContent="center">
+          <Grid item sm={2} />
+          <Grid item sm={8}>
+            <div style={{ height: 372, width: '100%' }}>
+              {getCalendar()}
+            </div>
+          </Grid>
+          <Grid item sm={2} />
+        </Grid>
+      </Grid>
+    </Stack>
+    );
+}
+
+export default App;
+
