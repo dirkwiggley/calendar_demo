@@ -123,8 +123,6 @@ function Calendar( { getSelectedDates } : GetSelectedDates ) {
           sx={{
             bgcolor: bgColor,
             color: color,
-            alignContent: "center", 
-            textAlign: "center",
             height: 60, 
             width: 60, 
             border: 1,
@@ -136,7 +134,14 @@ function Calendar( { getSelectedDates } : GetSelectedDates ) {
           }} 
           id={index}
           onClick={(e) => boxClicked(e, index, boxData)}>
-          <Typography alignItems={'center'} sx={{ height: '100%', width: '100%'}}>
+          <Typography 
+            alignItems={'center'} 
+            sx={{ 
+              display: "flex", 
+              flexWrap: "wrap", 
+              justifyContent: "center", 
+              height: '100%', 
+              width: '100%'}}>
             {boxData.data}
           </Typography>
         </Box>
